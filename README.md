@@ -2,6 +2,7 @@
 
 This is a redis based storage backend for [Colly](https://github.com/gocolly/colly) collectors.
 
+[![GoDoc](https://godoc.org/github.com/gocolly/redisstorage?status.svg)](https://godoc.org/github.com/gocolly/redisstorage)
 
 ## Install
 
