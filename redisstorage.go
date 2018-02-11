@@ -21,19 +21,20 @@ type Storage struct {
 	// Prefix is an optional string in the keys. It can be used
 	// to use one redis database for independent scraping tasks.
 	Prefix string
-	client *redis.Client
+	// Client is the redis connection
+	Client *redis.Client
 }
 
 // Init initializes the redis storage
 func (s *Storage) Init() error {
-	if s.client == nil {
-		s.client = redis.NewClient(&redis.Options{
+	if s.Client == nil {
+		s.Client = redis.NewClient(&redis.Options{
 			Addr:     s.Address,
 			Password: s.Password,
 			DB:       s.DB,
 		})
 	}
-	_, err := s.client.Ping().Result()
+	_, err := s.Client.Ping().Result()
 	if err != nil {
 		return fmt.Errorf("Redis connection error: %s", err.Error())
 	}
@@ -42,12 +43,12 @@ func (s *Storage) Init() error {
 
 // Visited implements colly/storage.Visited()
 func (s *Storage) Visited(requestID uint64) error {
-	return s.client.Set(s.getIDStr(requestID), "1", 0).Err()
+	return s.Client.Set(s.getIDStr(requestID), "1", 0).Err()
 }
 
 // IsVisited implements colly/storage.IsVisited()
 func (s *Storage) IsVisited(requestID uint64) (bool, error) {
-	_, err := s.client.Get(s.getIDStr(requestID)).Result()
+	_, err := s.Client.Get(s.getIDStr(requestID)).Result()
 	if err == redis.Nil {
 		return false, nil
 	} else if err != nil {
@@ -80,13 +81,13 @@ func (s *Storage) SetCookies(u *url.URL, cookies []*http.Cookie) {
 			cookieStrings = append(cookieStrings, c.String())
 		}
 	}
-	s.client.Set(s.getCookieID(u.Host), strings.Join(cookieStrings, "\n"), 0).Err()
+	s.Client.Set(s.getCookieID(u.Host), strings.Join(cookieStrings, "\n"), 0).Err()
 }
 
 // Cookies implements http/CookieJar.Cookies()
 func (s *Storage) Cookies(u *url.URL) []*http.Cookie {
 	// TODO RFC 6265
-	cookieStr, err := s.client.Get(s.getCookieID(u.Host)).Result()
+	cookieStr, err := s.Client.Get(s.getCookieID(u.Host)).Result()
 	if err != nil {
 		return nil
 	}
@@ -105,13 +106,6 @@ func (s *Storage) Cookies(u *url.URL) []*http.Cookie {
 		cookies = append(cookies, c)
 	}
 	return cookies
-}
-
-// Close implements colly/storage.Close() and closes redis connection
-func (s *Storage) Close() error {
-	s.client.Close()
-	s.client = nil
-	return nil
 }
 
 func (s *Storage) getIDStr(ID uint64) string {
