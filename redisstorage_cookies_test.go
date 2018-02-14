@@ -62,7 +62,51 @@ var _ = Describe("Storage CookieJar", func() {
 		Expect(sgot).To(ContainElement(cookies[1].String()))
 	})
 
-	It("should add cookies to existing cookies", func() {
+	It("should update existing cookies", func() {
+		s := newStore()
+		Expect(s.Init()).To(BeNil())
+		defer s.Destroy()
+
+		// SetCookies.
+		url, _ := url.Parse("http://example.org")
+		cookies := []*http.Cookie{
+			&http.Cookie{
+				Name:   "cookie1_name",
+				Value:  "cookie1_value",
+				Path:   "/",
+				Domain: ".example.org",
+			},
+			&http.Cookie{
+				Name:   "cookie2_name",
+				Value:  "cookie2_value",
+				Path:   "/",
+				Domain: ".example.org",
+			},
+		}
+		// Expect(s.SetCookies(url, cookies)).To(BeNil())
+		s.SetCookies(url, cookies)
+
+		// Change existing.
+		update := []*http.Cookie{
+			&http.Cookie{
+				Name:   "cookie1_name",
+				Value:  "cookie1_value_new",
+				Path:   "/",
+				Domain: ".example.org",
+			},
+		}
+		// Expect(s.SetCookies(url, update)).To(BeNil())
+		s.SetCookies(url, update)
+		// Get existing.
+		// got, err := s.Cookies(url)
+		got := s.Cookies(url)
+		// Expect(err).To(BeNil())
+		Expect(got).To(HaveLen(2))
+		sgot := toStrings(got)
+		Expect(sgot).To(ContainElement(update[0].String()))
+	})
+
+	It("should add new cookies to existing cookies", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
 		defer s.Destroy()
