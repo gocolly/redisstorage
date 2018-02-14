@@ -48,16 +48,12 @@ func (s *Storage) Init() error {
 func (s *Storage) Destroy() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	prefix := "*"
-	if s.Prefix != "" {
-		prefix = s.Prefix
-	}
-	r := s.Client.Keys(prefix + ":cookie:*")
+	r := s.Client.Keys(s.Prefix + ":cookie:*")
 	keys, err := r.Result()
 	if err != nil {
 		return err
 	}
-	r2 := s.Client.Keys(prefix + ":request:*")
+	r2 := s.Client.Keys(s.Prefix + ":request:*")
 	keys2, err := r2.Result()
 	if err != nil {
 		return err
