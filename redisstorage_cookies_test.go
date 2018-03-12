@@ -30,7 +30,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should set and get cookies", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies.
 		url, _ := url.Parse("http://example.org")
@@ -65,7 +65,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should update existing cookies", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies.
 		url, _ := url.Parse("http://example.org")
@@ -109,7 +109,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should add new cookies to existing cookies", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies.
 		url, _ := url.Parse("http://example.org")
@@ -153,7 +153,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should drop expired cookies", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies.
 		url, _ := url.Parse("http://example.org")
@@ -200,7 +200,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should drop secure cookies if not over https", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies - one is marked secure.
 		url, _ := url.Parse("https://example.org")
@@ -238,7 +238,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should not get cookies for an unknown domain", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// Get non-existing.
 		url, _ := url.Parse("http://no-such-domain.org")
@@ -251,7 +251,7 @@ var _ = Describe("Storage CookieJar", func() {
 	It("should handle cookies containing a newline", func() {
 		s := newStore()
 		Expect(s.Init()).To(BeNil())
-		defer s.Destroy()
+		defer s.Clear()
 
 		// SetCookies.
 		url, _ := url.Parse("http://example.org")

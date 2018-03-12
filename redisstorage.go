@@ -45,7 +45,8 @@ func (s *Storage) Init() error {
 	return err
 }
 
-func (s *Storage) Destroy() error {
+// Clear removes all entries from the storage
+func (s *Storage) Clear() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	r := s.Client.Keys(s.Prefix + ":cookie:*")
