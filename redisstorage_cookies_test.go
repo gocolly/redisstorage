@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/jimsmart/redisstorage"
+	"github.com/gocolly/redisstorage"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +19,7 @@ var _ = Describe("Storage CookieJar", func() {
 	newStore := func() *redisstorage.Storage {
 		// TODO(js) For ease of testing, these settings should probably come from environment variables.
 		s := &redisstorage.Storage{
-			Address:  "127.0.0.1:32768",
+			Address:  "127.0.0.1:6379",
 			Password: "",
 			DB:       0,
 			Prefix:   randomName(),
