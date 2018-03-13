@@ -3,11 +3,8 @@ package redisstorage
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/go-redis/redis"
 )
@@ -79,15 +76,8 @@ func (s *Storage) IsVisited(requestID uint64) (bool, error) {
 	return true, nil
 }
 
-// GetCookieJar implements colly/storage.GetCookieJar()
-func (s *Storage) GetCookieJar() http.CookieJar {
-	return s
-}
-
-// SetCookies implements http/CookieJar.SetCookies()
-func (s *Storage) SetCookies(u *url.URL, cookies []*http.Cookie) {
-	// TODO RFC 6265
-
+// SetCookies implements colly/storage..SetCookies()
+func (s *Storage) SetCookies(u *url.URL, cookies string) {
 	// TODO(js) Cookie methods currently have no way to return an error.
 
 	// We need to use a write lock to prevent a race in the db:
@@ -96,27 +86,8 @@ func (s *Storage) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	// ('last update wins' == best avoided).
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	cookieStr, err := s.Client.Get(s.getCookieID(u.Host)).Result()
-	if err == redis.Nil {
-		cookieStr = ""
-	} else if err != nil {
-		// return nil
-		log.Printf("SetCookies() .Get error %s", err)
-		return
-	}
-
-	// Merge existing cookies, new cookies have precendence.
-	cnew := make([]*http.Cookie, len(cookies))
-	copy(cnew, cookies)
-	existing := unstringify(cookieStr)
-	for _, c := range existing {
-		if !contains(cnew, c.Name) {
-			cnew = append(cnew, c)
-		}
-	}
 	// return s.Client.Set(s.getCookieID(u.Host), stringify(cnew), 0).Err()
-	err = s.Client.Set(s.getCookieID(u.Host), stringify(cnew), 0).Err()
+	err := s.Client.Set(s.getCookieID(u.Host), cookies, 0).Err()
 	if err != nil {
 		// return nil
 		log.Printf("SetCookies() .Set error %s", err)
@@ -124,9 +95,8 @@ func (s *Storage) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	}
 }
 
-// Cookies implements http/CookieJar.Cookies()
-func (s *Storage) Cookies(u *url.URL) []*http.Cookie {
-	// TODO RFC 6265
+// Cookies implements colly/storage.Cookies()
+func (s *Storage) Cookies(u *url.URL) string {
 	// TODO(js) Cookie methods currently have no way to return an error.
 
 	s.mu.RLock()
@@ -137,28 +107,9 @@ func (s *Storage) Cookies(u *url.URL) []*http.Cookie {
 	} else if err != nil {
 		// return nil, err
 		log.Printf("Cookies() .Get error %s", err)
-		return nil
+		return ""
 	}
-
-	// Parse raw cookies string to []*http.Cookie.
-	cookies := unstringify(cookiesStr)
-
-	// Filter.
-	now := time.Now()
-	cnew := make([]*http.Cookie, 0, len(cookies))
-	for _, c := range cookies {
-		// Drop expired cookies.
-		if c.RawExpires != "" && c.Expires.Before(now) {
-			continue
-		}
-		// Drop secure cookies if not over https.
-		if c.Secure && u.Scheme != "https" {
-			continue
-		}
-		cnew = append(cnew, c)
-	}
-	// return cnew, nil
-	return cnew
+	return cookiesStr
 }
 
 func (s *Storage) getIDStr(ID uint64) string {
@@ -167,31 +118,4 @@ func (s *Storage) getIDStr(ID uint64) string {
 
 func (s *Storage) getCookieID(c string) string {
 	return fmt.Sprintf("%s:cookie:%s", s.Prefix, c)
-}
-
-func stringify(cookies []*http.Cookie) string {
-	// Stringify cookies.
-	cs := make([]string, len(cookies))
-	for i, c := range cookies {
-		cs[i] = c.String()
-	}
-	return strings.Join(cs, "\n")
-}
-
-func unstringify(s string) []*http.Cookie {
-	h := http.Header{}
-	for _, c := range strings.Split(s, "\n") {
-		h.Add("Set-Cookie", c)
-	}
-	r := http.Response{Header: h}
-	return r.Cookies()
-}
-
-func contains(cookies []*http.Cookie, name string) bool {
-	for _, c := range cookies {
-		if c.Name == name {
-			return true
-		}
-	}
-	return false
 }
