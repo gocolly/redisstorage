@@ -1,12 +1,14 @@
 package redisstorage
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"sync"
 
 	"github.com/go-redis/redis"
+	"github.com/gocolly/colly/queue"
 )
 
 // Storage implements the redis storage backend for Colly
@@ -46,7 +48,7 @@ func (s *Storage) Init() error {
 func (s *Storage) Clear() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.Client.Keys(s.Prefix + ":cookie:*")
+	r := s.Client.Keys(s.getCookieID("*"))
 	keys, err := r.Result()
 	if err != nil {
 		return err
@@ -57,6 +59,7 @@ func (s *Storage) Clear() error {
 		return err
 	}
 	keys = append(keys, keys2...)
+	keys = append(keys, s.getQueueID())
 	return s.Client.Del(keys...).Err()
 }
 
@@ -112,10 +115,43 @@ func (s *Storage) Cookies(u *url.URL) string {
 	return cookiesStr
 }
 
+// AddRequest implements queue.Storage.AddRequest() function
+func (s *Storage) AddRequest(r *queue.Request) error {
+	d, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+	return s.Client.RPush(s.getQueueID(), d).Err()
+}
+
+// GetRequest implements queue.Storage.GetRequest() function
+func (s *Storage) GetRequest() (*queue.Request, error) {
+	r := &queue.Request{}
+	d, err := s.Client.LPop(s.getQueueID()).Bytes()
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(d, r)
+	if err != nil {
+		return nil, err
+	}
+	return r, err
+}
+
+// QueueSize implements queue.Storage.QueueSize() function
+func (s *Storage) QueueSize() (int, error) {
+	i, err := s.Client.LLen(s.getQueueID()).Result()
+	return int(i), err
+}
+
 func (s *Storage) getIDStr(ID uint64) string {
 	return fmt.Sprintf("%s:request:%d", s.Prefix, ID)
 }
 
 func (s *Storage) getCookieID(c string) string {
 	return fmt.Sprintf("%s:cookie:%s", s.Prefix, c)
+}
+
+func (s *Storage) getQueueID() string {
+	return fmt.Sprintf("%s:queue", s.Prefix)
 }
