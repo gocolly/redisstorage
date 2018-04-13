@@ -2,8 +2,6 @@ package redisstorage
 
 import (
 	"testing"
-
-	"github.com/gocolly/colly/queue"
 )
 
 func TestQueue(t *testing.T) {
@@ -21,7 +19,7 @@ func TestQueue(t *testing.T) {
 	defer s.Clear()
 	urls := []string{"http://example.com/", "http://go-colly.org/", "https://xx.yy/zz"}
 	for _, u := range urls {
-		if err := s.AddRequest(&queue.Request{Method: "GET", URL: u}); err != nil {
+		if err := s.AddRequest([]byte(u)); err != nil {
 			t.Error("failed to add request: " + err.Error())
 			return
 		}
@@ -31,7 +29,7 @@ func TestQueue(t *testing.T) {
 		return
 	}
 	for _, u := range urls {
-		if r, err := s.GetRequest(); err != nil || r.URL != u {
+		if r, err := s.GetRequest(); err != nil || string(r) != u {
 			t.Error("failed to get request: " + err.Error())
 			return
 		}

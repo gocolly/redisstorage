@@ -1,14 +1,12 @@
 package redisstorage
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"sync"
 
 	"github.com/go-redis/redis"
-	"github.com/gocolly/colly/queue"
 )
 
 // Storage implements the redis storage backend for Colly
@@ -116,22 +114,13 @@ func (s *Storage) Cookies(u *url.URL) string {
 }
 
 // AddRequest implements queue.Storage.AddRequest() function
-func (s *Storage) AddRequest(r *queue.Request) error {
-	d, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	return s.Client.RPush(s.getQueueID(), d).Err()
+func (s *Storage) AddRequest(r []byte) error {
+	return s.Client.RPush(s.getQueueID(), r).Err()
 }
 
 // GetRequest implements queue.Storage.GetRequest() function
-func (s *Storage) GetRequest() (*queue.Request, error) {
-	r := &queue.Request{}
-	d, err := s.Client.LPop(s.getQueueID()).Bytes()
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(d, r)
+func (s *Storage) GetRequest() ([]byte, error) {
+	r, err := s.Client.LPop(s.getQueueID()).Bytes()
 	if err != nil {
 		return nil, err
 	}
