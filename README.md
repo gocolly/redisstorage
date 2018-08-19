@@ -31,8 +31,6 @@ storage := &redisstorage.Storage{
     Prefix:   "job01",
 }
 
-defer storage.Close()
-
 err := c.SetStorage(storage)
 if err != nil {
     panic(err)
