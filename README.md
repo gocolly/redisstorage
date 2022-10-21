@@ -18,7 +18,7 @@ go get -u github.com/gocolly/redisstorage
 
 ```go
 import (
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/redisstorage"
 )
 ```
@@ -34,7 +34,7 @@ storage := &redisstorage.Storage{
     Prefix:   "job01",
 }
 
-if err := c.SetStorage(storage); err != {
+if err := c.SetStorage(storage); err != nil{
     panic(err)
 }
 ```
@@ -43,7 +43,7 @@ if err := c.SetStorage(storage); err != {
 
 ```go
 import (
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/redisstorage"
 )
 ```

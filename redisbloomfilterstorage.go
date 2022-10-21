@@ -25,7 +25,7 @@ func (s *RedisBloomFilterStorage) Init() error {
 			DB:       s.DB,
 		})
 	}
-	s.RedisBloomFilter = filter.NewBloomFilter(s.Client, s.Prefix+"_bloom")
+	s.RedisBloomFilter = filter.NewBloomFilter(s.Client, s.Prefix+":bloom")
 	if _, err := s.Client.Ping().Result(); err != nil {
 		return fmt.Errorf("redis connection error: %s", err.Error())
 	}
