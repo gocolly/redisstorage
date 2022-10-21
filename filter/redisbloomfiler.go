@@ -12,30 +12,27 @@ const (
 	// for detailed error rate table, see http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
 	// maps as k in the error rate table
 	maps      = 14
-	setScript = `
-for _, offset in ipairs(ARGV) do
+	setScript = `for _, offset in ipairs(ARGV) do
 	redis.call("setbit", KEYS[1], offset, 1)
-end
-`
-	testScript = `
-for _, offset in ipairs(ARGV) do
+end`
+	testScript = `for _, offset in ipairs(ARGV) do
 	if tonumber(redis.call("getbit", KEYS[1], offset)) == 0 then
 		return false
 	end
 end
-return true
-`
+return true`
 )
+
+// bitSetProvider
+type bitSetProvider interface {
+	check([]uint) (bool, error)
+	set([]uint) error
+}
 
 // BloomFilter A Filter is a bloom filter.
 type BloomFilter struct {
 	bits   uint
 	bitSet bitSetProvider
-}
-
-type bitSetProvider interface {
-	check([]uint) (bool, error)
-	set([]uint) error
 }
 
 // NewBloomFilter create a bloomFilter, store is the backed redis, key is the key for the bloom filter,
