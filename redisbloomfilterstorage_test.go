@@ -1,11 +1,15 @@
 package redisstorage
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
 )
 
 func TestRedisBloomFilterStorage(t *testing.T) {
-	var mock_requestId uint64 = 231986
+	// mock rquestID to Verify bloomfilter
+	mock_requestId := rand.Uint64()
+	fmt.Println(mock_requestId)
 	s := &RedisBloomFilterStorage{
 		Storage:          &Storage{Prefix: `test`},
 		RedisBloomFilter: nil,
@@ -13,6 +17,7 @@ func TestRedisBloomFilterStorage(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Error("failed to initialize client: " + err.Error())
 	}
+	defer s.Clear()
 
 	t.Run(testing.CoverMode(), func(t *testing.T) {
 		if err := s.Visited(mock_requestId); err != nil {
