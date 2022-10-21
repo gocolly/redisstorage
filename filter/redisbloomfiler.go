@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// for detailed error rate table, see http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
-	// maps as k in the error rate table
-	maps      = 14
 	setScript = `for _, offset in ipairs(ARGV) do
 	redis.call("setbit", KEYS[1], offset, 1)
 end`
@@ -32,6 +29,7 @@ type bitSetProvider interface {
 // BloomFilter A Filter is a bloom filter.
 type BloomFilter struct {
 	bits   uint
+	maps   uint
 	bitSet bitSetProvider
 }
 
@@ -41,9 +39,12 @@ type BloomFilter struct {
 // elements - means how many actual elements
 // when maps = 14, formula: 0.7*(bits/maps), bits = 20*elements, the error rate is 0.000067 < 1e-4
 // for detailed error rate table, see http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
-func NewBloomFilter(store *redis.Client, key string, bits uint) *BloomFilter {
+func NewBloomFilter(store *redis.Client, key string) *BloomFilter {
+	var bits uint = 2 << 31
+	var maps uint = 14
 	return &BloomFilter{
 		bits:   bits,
+		maps:   maps,
 		bitSet: newRedisBitSet(store, key, bits),
 	}
 }
@@ -66,12 +67,11 @@ func (f *BloomFilter) Exists(data []byte) (bool, error) {
 }
 
 func (f *BloomFilter) getLocations(data []byte) []uint {
-	locations := make([]uint, maps)
-	for i := uint(0); i < maps; i++ {
+	locations := make([]uint, f.maps)
+	for i := uint(0); i < f.maps; i++ {
 		hashValue := murmur3.Sum64(append(data, byte(i)))
 		locations[i] = uint(hashValue % uint64(f.bits))
 	}
-
 	return locations
 }
 
