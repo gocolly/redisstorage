@@ -11,8 +11,7 @@ func TestRedisBloomFilterStorage(t *testing.T) {
 	mock_requestId := rand.Uint64()
 	fmt.Println(mock_requestId)
 	s := &RedisBloomFilterStorage{
-		Storage:          &Storage{Prefix: `test`},
-		RedisBloomFilter: nil,
+		Storage: &Storage{Prefix: `test`},
 	}
 	if err := s.Init(); err != nil {
 		t.Error("failed to initialize client: " + err.Error())
