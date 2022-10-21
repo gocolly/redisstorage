@@ -4,18 +4,21 @@ This is a redis based storage backend for [Colly](https://github.com/gocolly/col
 
 [![GoDoc](https://godoc.org/github.com/gocolly/redisstorage?status.svg)](https://godoc.org/github.com/gocolly/redisstorage)
 
-## Install
+
+## Redis Storage
+
+### Install
 
 ```
 go get -u github.com/gocolly/redisstorage
 ```
 
 
-## Usage
+### Usage
 
 ```go
 import (
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/redisstorage"
 )
 ```
@@ -31,12 +34,38 @@ storage := &redisstorage.Storage{
     Prefix:   "job01",
 }
 
-err := c.SetStorage(storage)
-if err != nil {
+if err := c.SetStorage(storage); err != nil{
     panic(err)
 }
 ```
 
+## RedisBloomFilterStorage
+
+```go
+import (
+	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/redisstorage"
+)
+```
+
+
+```go
+c := colly.NewCollector()
+
+storage := &redisstorage.RedisBloomFilterStorage{
+    Storage: &Storage{
+        Address:  "127.0.0.1:6379",
+        Password: "",
+        DB:       0,
+        Prefix:   "job01",
+    }
+}
+
+if err := c.SetStorage(storage); err != {
+    panic(err)
+}
+
+```
 
 ## Bugs
 
