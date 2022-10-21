@@ -32,6 +32,27 @@ func (s *RedisBloomFilterStorage) Init() error {
 	return nil
 }
 
+// Clear removes all entries from the storage and bloom bits
+func (s *RedisBloomFilterStorage) Clear() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	r := s.Client.Keys(s.getCookieID("*"))
+	keys, err := r.Result()
+	if err != nil {
+		return err
+	}
+	r2 := s.Client.Keys(s.Prefix + ":request:*")
+	keys2, err := r2.Result()
+	if err != nil {
+		return err
+	}
+	keys = append(keys, keys2...)
+	keys = append(keys, s.getQueueID())
+	keys = append(keys, s.Prefix+"_bloom")
+	return s.Client.Del(keys...).Err()
+}
+
 // Visited implements colly/storage.Visited(), base on redis bloom filter
 func (s *RedisBloomFilterStorage) Visited(requestID uint64) error {
 	b := make([]byte, 8)
